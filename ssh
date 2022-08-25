@@ -1,0 +1,5 @@
+# remote server:
+service start ssh
+# client
+ssh hanh@ip_address
+input password

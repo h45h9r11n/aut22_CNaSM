@@ -1,0 +1,10 @@
+# default
+iptables -L
+
+# reset to default
+iptables --policy INPUT ACCEPT
+iptables --policy OUTPUT ACCEPT
+iptables --policy FORWARD ACCEPT
+
+#
+
