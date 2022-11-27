@@ -139,7 +139,7 @@ john --format=md5crypt hashes.txt
 ```
 
 ## Windows XP
-* Link download metasploitable VM `https://archive.org/details/WinXPProSP3Russian`
+* Link download `https://archive.org/details/WinXPProSP3Russian`
 
 ### Opening ports
 
@@ -167,7 +167,7 @@ MAC Address: 00:0C:29:52:71:FE (VMware)
 Service Info: OSs: Windows, Windows XP; CPE: cpe:/o:microsoft:windows, cpe:/o:microsoft:windows_xp
 ```
 ## Windows Server 2003
-* Link download metasploitable VM `https://archive.org/details/WinServer2003EnterpriseEditionSP1RUS`
+* Link download `https://archive.org/details/WinServer2003EnterpriseEditionSP1RUS`
 
 ### Opening ports
 ```
