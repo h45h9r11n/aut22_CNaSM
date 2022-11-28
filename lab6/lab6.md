@@ -148,8 +148,8 @@ john --format=LM 104.txt
 ```
 
 ## Windows XP
-* Link download `https://archive.org/details/WinXPProSP3Russian`
-
+* Link download `https://archive.org/details/WinXPSP2HomeProRUS`
+X3WJB-3B2BH-3MPM6-8F6GR-X9HBJ
 ### Opening ports
 
 ```
